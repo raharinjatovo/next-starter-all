@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 import { auth } from "@/lib/auth";
 import { LoginButton,LogoutButton } from "./AuthButton";
 export default async function Home() {
@@ -13,6 +13,7 @@ export default async function Home() {
         {!session?.user
         ? <LoginButton/>: <LogoutButton/>}
         </div>
+        <h1>prod separated with env dev and env prod</h1>
       </div>
   );
 }

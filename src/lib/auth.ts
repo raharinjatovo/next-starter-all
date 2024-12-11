@@ -1,10 +1,24 @@
 import NextAuth from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
+import { DefaultSession } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
+import Facebook from "next-auth/providers/facebook"
+import LinkedIn from "next-auth/providers/linkedin"
 
-import {prisma} from "./prisma"
-export const {  handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+declare module "next-auth" {
+  interface Session {
+    user: {
+     
+      username?: string; // Add the username property
+    } & DefaultSession["user"]; // Extend the default user properties
+  }
+
+  
+}
+// check if it on localhost
+
+
+export const {  handlers, auth } = NextAuth({
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID as string,
@@ -15,6 +29,12 @@ export const {  handlers, auth, signIn, signOut } = NextAuth({
         },
       },
     }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+    Facebook,
+    LinkedIn
   ],
   callbacks: {
     async signIn({ user, account }) {
@@ -26,6 +46,8 @@ export const {  handlers, auth, signIn, signOut } = NextAuth({
           },
         });
 
+       
+       
         if (emailResponse.ok) {
           const emails: { email: string; primary: boolean }[] = await emailResponse.json();
           const primaryEmail = emails.find((email) => email.primary)?.email;
@@ -36,18 +58,30 @@ export const {  handlers, auth, signIn, signOut } = NextAuth({
       }
       return true; // Continue with sign-in
     },
-    async session({ session, token }) {
-      if (token?.email) {
-        session.user.email = token.email; // Store email in session
-      }
-      return session;
-    },
     async jwt({ token, account, profile }) {
       if (account?.provider === "github" && profile) {
         token.email = profile.email || token.email; // Store email in JWT token
+        token.id = account.access_token;
       }
       return token;
     },
+    async session({ session, token }) {
+      const username = await fetch("https://api.github.com/user", {
+        headers: {
+          Authorization: `token ${token.id}`, // Send the access token to authenticate the request
+        },
+      });
+      const userNameTxt =await username.json()
+     
+      
+      if (token?.email) {
+        session.user.username  = await userNameTxt.login;
+        session.user.email = token.email; // Store email in session
+        
+      }
+      return session;
+    },
+   
   },
   session: {
     strategy: "jwt", // Use JWT for session management
