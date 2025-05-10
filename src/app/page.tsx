@@ -2,8 +2,6 @@
 import { auth } from "@/lib/auth";
 import { LoginButton,LogoutButton } from "./AuthButton";
 
-import { Hello } from "./hello";
-import { LoginButton,LogoutButton } from "@/app/AuthButton";
 
 
 // console.log(await create("helo"))
