@@ -2,9 +2,6 @@
 import { auth } from "@/lib/auth";
 import { LoginButton,LogoutButton } from "./AuthButton";
 
-import { Hello } from "./hello";
-import { LoginButton,LogoutButton } from "@/app/AuthButton";
-
 
 // console.log(await create("helo"))
 export default async function Home() {
@@ -13,7 +10,6 @@ export default async function Home() {
   return (
     
       <div>
-        
         <h2>{session?.user
         ? "Auth " +session?.user.email:"not authentificated"}</h2>
         <div>
