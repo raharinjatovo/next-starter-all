@@ -1,9 +1,15 @@
+
+
 import NextAuth from "next-auth"
+
+
+import { PrismaClient } from '@prisma/client';
 import { DefaultSession } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import Facebook from "next-auth/providers/facebook"
 import LinkedIn from "next-auth/providers/linkedin"
+const prisma = new PrismaClient()
 
 declare module "next-auth" {
   interface Session {
@@ -38,25 +44,47 @@ export const {  handlers, auth } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "github" && account.access_token) {
-        // Fetch user's emails from GitHub API
-        const emailResponse = await fetch("https://api.github.com/user/emails", {
-          headers: {
-            Authorization: `token ${account.access_token}`, // Send the access token to authenticate the request
-          },
+      try {
+        // Check if user exists for any provider
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email! }
         });
-
-       
-       
-        if (emailResponse.ok) {
-          const emails: { email: string; primary: boolean }[] = await emailResponse.json();
-          const primaryEmail = emails.find((email) => email.primary)?.email;
-          if (primaryEmail) {
-            user.email = primaryEmail; // Set the primary email on the user object
+    
+        if (!existingUser) {
+          // Create new user if doesn't exist, regardless of provider
+          await prisma.user.create({
+            data: {
+              email: user.email!,
+              name: user.name,
+              // Add provider-specific logic if needed
+              ...(account?.provider === 'github' && {
+                // Additional GitHub specific fields if needed
+              }),
+              ...(account?.provider === 'google' && {
+                // Additional Google specific fields if needed
+              })
+            }
+          });
+        }
+    
+        // Handle GitHub specific email verification if needed
+        if (account?.provider === "github" && account.access_token) {
+          const emailResponse = await fetch("https://api.github.com/user/emails", {
+            headers: {
+              Authorization: `token ${account.access_token}`,
+            },
+          });
+    
+          if (emailResponse.ok) {
+           console.log(emailResponse.ok)
           }
         }
+    
+        return true; // Continue with sign-in
+      } catch (error) {
+        console.error("Error in signIn callback:", error);
+        return true; // Still allow sign in even if DB save fails
       }
-      return true; // Continue with sign-in
     },
     async jwt({ token, account, profile }) {
       if (account?.provider === "github" && profile) {
