@@ -1,7 +1,7 @@
 
 import { auth } from "@/lib/auth";
 import { LoginButton,LogoutButton } from "./AuthButton";
-import create  from "./Back/Create";
+
 
 // console.log(await create("helo"))
 export default async function Home() {
