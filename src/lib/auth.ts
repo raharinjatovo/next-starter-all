@@ -1,7 +1,8 @@
 
 
 import NextAuth from "next-auth"
-
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 
 import { PrismaClient } from '@prisma/client';
 import { DefaultSession } from "next-auth";
@@ -26,6 +27,38 @@ declare module "next-auth" {
 
 export const {  handlers, auth } = NextAuth({
   providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials.password) {
+          return null;
+        }
+
+        // Ensure credentials.email and credentials.password are strings
+        const email = typeof credentials.email === 'string' ? credentials.email : '';
+        const password = typeof credentials.password === 'string' ? credentials.password : '';
+
+        if (!email || !password) { // Double check after ensuring type
+            return null;
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: email }
+        });
+
+        if (user && user.password) { // Check if user and user.password exist
+          const isValidPassword = await bcrypt.compare(password, user.password);
+          if (isValidPassword) {
+            return { id: user.id.toString(), email: user.email, name: user.name }; // Return user object that NextAuth expects, ensure id is string
+          }
+        }
+        return null; // Authentication failed
+      }
+    }),
     GithubProvider({
       clientId: process.env.GITHUB_ID as string,
       clientSecret: process.env.GITHUB_SECRET as string,
