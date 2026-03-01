@@ -1,12 +1,38 @@
 {
   "name": "next-starter-all",
   "version": "0.1.0",
+  "description": "A comprehensive Next.js starter template with authentication, database integration, and modern UI",
+  "keywords": [
+    "nextjs",
+    "react",
+    "typescript",
+    "authentication",
+    "prisma",
+    "postgresql",
+    "tailwindcss",
+    "nextauth",
+    "oauth",
+    "starter-template"
+  ],
+  "author": "Mbolatiana",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "setup": "./setup.sh"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
@@ -27,6 +53,7 @@
     "postcss": "^8",
     "prisma": "^6.0.1",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.6.2",
     "typescript": "^5"
   }
 }
